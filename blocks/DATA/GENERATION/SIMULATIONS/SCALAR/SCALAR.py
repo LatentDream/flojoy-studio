@@ -4,8 +4,8 @@ from typing import Optional
 
 @flojoy
 def SCALAR(
-    _: Optional[DataContainer] = None,
     value: float = 3.0,
+    default: Optional[DataContainer] = None,
 ) -> Scalar:
     """Return a single Scalar value.
 

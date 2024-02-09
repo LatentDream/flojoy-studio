@@ -1,8 +1,10 @@
+from typing import Optional
 from flojoy import flojoy, Boolean
+from flojoy import DataContainer
 
 
 @flojoy
-def BOOLEAN(status: bool = True) -> Boolean:
+def BOOLEAN(status: bool = True, default: Optional[DataContainer] = None) -> Boolean:
     """Takes one argument as input.
     Based on the input, it generates a boolean type data.
     If the status is True, then it generates true constant, else false constant.

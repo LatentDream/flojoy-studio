@@ -1,23 +1,18 @@
 import numpy as np
-from flojoy import flojoy, Vector, OrderedPair
+from flojoy import flojoy, Vector, DataContainer
 from typing import Optional
 
 
 @flojoy
 def LINSPACE(
-    default: Optional[OrderedPair | Vector] = None,
     start: float = 10,
     end: float = 0,
     step: int = 1000,
+    default: Optional[DataContainer] = None,
 ) -> Vector:
     """Generate a Vector of evenly spaced data between two points.
 
     This block uses the 'linspace' numpy function. It is useful for generating an x-axis for the OrderedPair data type.
-
-    Inputs
-    ------
-    default : OrderedPair
-        Optional input in case LINSPACE is used in a loop. Not used.
 
     Parameters
     ----------

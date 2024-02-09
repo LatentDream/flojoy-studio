@@ -1,11 +1,11 @@
 from numpy import arange, full
-from flojoy import flojoy, Vector, OrderedPair, Scalar
+from flojoy import flojoy, Vector, OrderedPair, Scalar, DataContainer
 from typing import Optional, Literal
 
 
 @flojoy
 def CONSTANT(
-    default: Optional[Vector | OrderedPair] = None,
+    input_size: Optional[Vector | OrderedPair] = None,
     dc_type: Literal["Scalar", "Vector", "OrderedPair"] = "OrderedPair",
     constant: float = 3.0,
     step: float = 1000,
@@ -14,8 +14,8 @@ def CONSTANT(
 
     Inputs
     ------
-    default : OrderedPair|Vector
-        Optional input that defines the size of the output.
+    input_size : OrderedPair|Vector
+        Optional input that defines the size of the output. It can be use as a default input without any side effect if another type is provided.
 
     Parameters
     ----------
@@ -39,12 +39,12 @@ def CONSTANT(
     """
 
     x = arange(0, step, 1)
-    if default:
-        match default:
+    if input_size:
+        match input_size:
             case OrderedPair():
-                x = default.y
+                x = input_size.y
             case Vector():
-                x = default.v
+                x = input_size.v
     y = full(len(x), constant)
 
     match dc_type:

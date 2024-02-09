@@ -4,7 +4,7 @@ from typing import Optional
 
 @flojoy
 def TEXT(
-    _: Optional[DataContainer] = None,
+    default: Optional[DataContainer] = None,
     value: TextArea = TextArea("Hello World!"),
 ) -> String:
     """Return a String DataContainer with given input text.
