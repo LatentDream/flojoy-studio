@@ -35,6 +35,6 @@ def READ_INPUT_STREAM_INTO_BUFFER(
 
     task = DeviceConnectionManager.get_connection(task_name).get_handle()
 
-    task.in_stream.readinto(buffer.v)
+    task.in_stream.read_into(buffer.v)
 
     return buffer
