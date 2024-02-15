@@ -1,11 +1,16 @@
 from flojoy import flojoy, DataContainer, DeviceConnectionManager, Vector
-from typing import Optional
+from typing import Optional, Literal
 
 
 @flojoy(deps={"nidaqmx": "0.9.0"})
 def READ_INPUT_STREAM_INTO_BUFFER(
     task_name: str,
     buffer: Vector,
+    value_format: Literal[
+        "int8",
+        "int16",
+        "int32",
+    ],        
     default: Optional[DataContainer] = None,
 ) -> Vector:
     """Reads raw samples from the specified task or virtual channels into the provided buffer.
@@ -24,6 +29,8 @@ def READ_INPUT_STREAM_INTO_BUFFER(
     buffer : Vector
         Reads raw samples from the specified task or virtual channels into this pre-allocated buffer.
         Ensure that the buffer size is appropriate for the expected number of samples and the raw sample size.
+    value_format : Literal
+        Specifies the format of the data to read. If you use a different integer size than the native format of the device, one integer can contain multiple samples or one sample can stretch across multiple integers.
     default : Optional[DataContainer], optional
         Special parameter used by Flojoy to connect blocks together.
 
