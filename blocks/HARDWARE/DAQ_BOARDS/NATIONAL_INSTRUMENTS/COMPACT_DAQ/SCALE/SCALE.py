@@ -1,9 +1,10 @@
-from typing import Literal, DeviceConnectionManager, Vector
-from flojoy import flojoy
-from flojoy.data_container import Vector
+from typing import Literal
+from flojoy import flojoy, DeviceConnectionManager, Vector
 import nidaqmx
 from nidaqmx._task_modules.channels import AIChannel, AOChannel, CIChannel, COChannel, DIChannel, DOChannel
 import logging
+from nidaqmx.constants import ChannelType
+import numpy as np
 
 
 @flojoy(deps={"nidaqmx": "0.9.0"})
@@ -19,9 +20,18 @@ def SCALE(
 ) -> Vector:
 
     task: nidaqmx.Task = DeviceConnectionManager.get_connection(task_name).get_handle()
+    channels_to_read = task.in_stream.channels_to_read
+    nb_chan = len(channels_to_read)
+    channel_type = channels_to_read.chan_type
+    logging.info(f"Task {task_name} has {nb_chan} channels of type {channel_type}")
 
-    for chan in task.ai_channels:
-        coeff = chan.pwr_current_dev_scaling_coeff
-        logging.info(f"Channel {chan.name} has scaling coefficient {coeff}")  
-        
+    if channel_type == ChannelType.ANALOG_INPUT:
+        for channel in channels_to_read:
+            coeff = channel.ai_dev_scaling_coeff
+            coeff.reverse()
+            poly = np.poly1d(coeff)
+            data = Vector(poly(data.v))
+    else:
+        NotImplemented(f"Channel type {channel_type} not supported yet!")
+
     return data
