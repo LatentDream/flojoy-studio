@@ -414,7 +414,6 @@ export function DataTable() {
                     >
                       Add Conditional
                     </ContextMenuItem>
-                    <ContextMenuItem>Show Output Plot</ContextMenuItem>
                     <ContextMenuItem
                       onClick={() => onRemoveTest([parseInt(row.id)])}
                     >
