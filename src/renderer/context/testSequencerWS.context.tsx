@@ -39,7 +39,7 @@ export function TestSequencerWSProvider({
     result: boolean,
     timeTaken: number,
     isSavedToCloud: boolean,
-    error: string | null
+    error: string | null,
   ) => {
     setElems.withException((elems) => {
       const newElems = [...elems];
@@ -86,7 +86,7 @@ export function TestSequencerWSProvider({
         data.result,
         data.time_taken,
         data.is_saved_to_cloud,
-        data.error
+        data.error,
       );
       // Don't specify a backend state here, because we want to keep the "RUNNER" or "EXPORT" state
     },
