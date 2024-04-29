@@ -1,8 +1,7 @@
 import json
 import logging
 import requests
-from fastapi import APIRouter, Header, Response
-from flojoy.env_var import get_env_var, get_flojoy_cloud_url
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, Response
 from flojoy_cloud import test_sequencer
 from pydantic import BaseModel, Field
 from typing import Annotated, Optional
@@ -10,6 +9,9 @@ import datetime
 from typing import Literal
 import pandas as pd
 from functools import wraps
+
+from captain.middleware.auth_middleware import is_connected, retreive_user
+from captain.types.auth import Auth
 
 
 # Utils ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -49,10 +51,10 @@ def temporary_cache(*args, ttl=20):
     return decorator
 
 
-async def get_cloud_part_variation(part_variation_id: str):
+async def get_cloud_part_variation(part_variation_id: str, user: Auth):
     logging.info("Querying part variation")
-    url = get_flojoy_cloud_url() + "partVariation/" + part_variation_id
-    response = requests.get(url, headers=headers_builder())
+    url = user.url + "partVariation/" + part_variation_id
+    response = requests.get(url, headers=headers_builder(user))
     res = response.json()
     res["partVariationId"] = part_variation_id
     logging.info("Part variation retrieved: %s", res)
@@ -65,6 +67,8 @@ class SecretNotFound(Exception):
 
 def error_response_builder(e: Exception) -> Response:
     logging.error(f"Error from Flojoy Cloud: {e}")
+    if isinstance(e, HTTPException):
+        return Response(status_code=e.status_code, content=json.dumps(e.__str__))
     if isinstance(e, SecretNotFound):
         return Response(status_code=401, content=json.dumps([]))
     else:
@@ -72,17 +76,14 @@ def error_response_builder(e: Exception) -> Response:
 
 
 @temporary_cache
-def headers_builder(with_workspace_id=True) -> dict:
-    workspace_secret = get_env_var("FLOJOY_CLOUD_WORKSPACE_SECRET")
+def headers_builder(user: Auth, with_workspace_id=True) -> dict:
     logging.info("Querying workspace current")
-    if workspace_secret is None:
-        raise SecretNotFound
     headers = {
         "Content-Type": "application/json",
-        "flojoy-workspace-personal-secret": workspace_secret,
+        "flojoy-workspace-personal-secret": user.token,
     }
     if with_workspace_id:
-        url = get_flojoy_cloud_url() + "workspace/"
+        url = user.url + "workspace/"
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
             logging.error(f"Failed to get workspace id {url}: {response.text}")
@@ -187,10 +188,10 @@ def get_measurement(m: Measurement) -> MeasurementData:
     return data
 
 
-async def get_part(part_id: str) -> Part:
+async def get_part(part_id: str, user: Auth) -> Part:
     logging.info("Querying part")
-    url = get_flojoy_cloud_url() + "part/" + part_id
-    response = requests.get(url, headers=headers_builder())
+    url = user.url + "part/" + part_id
+    response = requests.get(url, headers=headers_builder(user))
     return Part(**response.json())
 
 
@@ -200,22 +201,23 @@ async def get_part(part_id: str) -> Part:
 router = APIRouter(tags=["cloud"])
 
 
-@router.get("/cloud/projects/")
-async def get_cloud_projects():
+@router.get("/cloud/projects/", dependencies=[Depends(is_connected)])
+async def get_cloud_projects(req: Request):
     """
     Get all projects from the Flojoy Cloud.
     """
     try:
         logging.info("Querying projects")
-        url = get_flojoy_cloud_url() + "project/"
-        response = requests.get(url, headers=headers_builder())
+        user = retreive_user(req)
+        url = user.url + "project/"
+        response = requests.get(url, headers=headers_builder(user))
         if response.status_code != 200:
             return Response(status_code=response.status_code, content=json.dumps([]))
         projects = [Project(**project_data) for project_data in response.json()]
         projects_res = []
         for p in projects:
-            part_var = await get_cloud_part_variation(p.part_variation_id)
-            part = await get_part(part_var.part_id)
+            part_var = await get_cloud_part_variation(p.part_variation_id, user)
+            part = await get_part(part_var.part_id, user)
             projects_res.append(
                 {
                     "label": p.name,
@@ -234,16 +236,17 @@ async def get_cloud_projects():
         return error_response_builder(e)
 
 
-@router.get("/cloud/stations/{project_id}")
-async def get_cloud_stations(project_id: str):
+@router.get("/cloud/stations/{project_id}", dependencies=[Depends(is_connected)])
+async def get_cloud_stations(project_id: str, req: Request):
     """
     Get all station of a project from the Flojoy Cloud.
     """
     try:
         logging.info("Querying stations")
-        url = get_flojoy_cloud_url() + "station/"
+        user = retreive_user(req)
+        url = user.url + "station/"
         querystring = {"projectId": project_id}
-        response = requests.get(url, headers=headers_builder(), params=querystring)
+        response = requests.get(url, headers=headers_builder(user), params=querystring)
         if response.status_code != 200:
             logging.error(f"Error getting stations from Flojoy Cloud: {response.text}")
             return Response(status_code=response.status_code, content=json.dumps([]))
@@ -256,12 +259,13 @@ async def get_cloud_stations(project_id: str):
         return error_response_builder(e)
 
 
-@router.get("/cloud/partVariation/{part_var_id}/unit")
-async def get_cloud_variant_unit(part_var_id: str):
+@router.get("/cloud/partVariation/{part_var_id}/unit", dependencies=[Depends(is_connected)])
+async def get_cloud_variant_unit(part_var_id: str, req: Request):
     try:
         logging.info(f"Querying unit for part {part_var_id}")
-        url = f"{get_flojoy_cloud_url()}partVariation/{part_var_id}/unit"
-        response = requests.get(url, headers=headers_builder())
+        user = retreive_user(req)
+        url = f"{user.url}partVariation/{part_var_id}/unit"
+        response = requests.get(url, headers=headers_builder(user))
         if response.status_code != 200:
             logging.error(f"Error getting stations from Flojoy Cloud: {response.text}")
             return Response(status_code=response.status_code, content=json.dumps([]))
@@ -272,11 +276,12 @@ async def get_cloud_variant_unit(part_var_id: str):
         return error_response_builder(e)
 
 
-@router.post("/cloud/session/")
-async def post_cloud_session(_: Response, body: Session):
+@router.post("/cloud/session/", dependencies=[Depends(is_connected)])
+async def post_cloud_session(_: Response, body: Session, req: Request):
     try:
         logging.info("Posting session")
-        url = get_flojoy_cloud_url() + "session/"
+        user = retreive_user(req)
+        url = user.url + "session/"
         payload = body.model_dump(by_alias=True)
         payload["createdAt"] = utcnow_str()
         for i, m in enumerate(payload["measurements"]):
@@ -284,7 +289,7 @@ async def post_cloud_session(_: Response, body: Session):
             m["pass"] = m.pop("pass_")
             m["durationMs"] = int(m.pop("completionTime") * 1000)
             del m["unit"]
-        response = requests.post(url, json=payload, headers=headers_builder())
+        response = requests.post(url, json=payload, headers=headers_builder(user))
         if response.status_code == 200:
             return Response(status_code=200, content=json.dumps(response.json()))
         else:
@@ -296,15 +301,19 @@ async def post_cloud_session(_: Response, body: Session):
         return error_response_builder(e)
 
 
-@router.get("/cloud/user/")
-async def get_user_info(secret: Annotated[str | None, Header()]):
+# Verify cloud connection ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+@router.get("/cloud/user/", dependencies=[Depends(is_connected)])
+async def get_user_info(req: Request, secret: Annotated[str | None, Header()]):
     try:
         logging.info("Querying user info")
-        url = get_flojoy_cloud_url() + "user/"
+        user = retreive_user(req)
+        url = user.url + "user/"
         headers = (
             {"flojoy-workspace-personal-secret": secret}
             if secret
-            else headers_builder(with_workspace_id=False)
+            else headers_builder(user, with_workspace_id=False)
         )
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -319,11 +328,11 @@ async def get_user_info(secret: Annotated[str | None, Header()]):
 
 
 @router.get("/cloud/health/")
-async def get_cloud_health(url: Annotated[str | None, Header()]):
+async def get_cloud_health(url: Annotated[str | None, Header()], req: Request):
     try:
         logging.info("Querying health")
         if url is None:
-            url = get_flojoy_cloud_url()
+            url = retreive_user(req).url
         url = url + "health/"
         response = requests.get(url)
         if response.status_code == 200:

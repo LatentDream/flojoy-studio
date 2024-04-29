@@ -1,9 +1,11 @@
-export const allRoles = ["Admin", "Operator"] as const;
+export const allRoles = ["Admin", "Operator", "Local"] as const;
 export type Role = (typeof allRoles)[number];
 
 export type User = {
-  name: string;
   role: Role;
-  password?: string;
+  // Field for if connected to a workspace
+  name: string;
+  token?: string;
+  workspace?: string;
   logged?: boolean;
 };

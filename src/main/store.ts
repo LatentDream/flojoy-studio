@@ -13,7 +13,7 @@ export const store = new Store<TypedStore>({
     users: [
       {
         name: os.userInfo().username,
-        role: "Admin",
+        role: "Local",
         logged: true,
       },
     ],
