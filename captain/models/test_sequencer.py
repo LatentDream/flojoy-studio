@@ -19,6 +19,8 @@ class TestTypes(StrEnum):
     python = "python"
     flojoy = "flojoy"
     matlab = "matlab"
+    placeholder = "placeholder"
+    robotframework = "robotframework"
 
 
 class StatusTypes(StrEnum):
@@ -65,6 +67,7 @@ class Test(BaseModel):
     max_value: Optional[float] = Field(None, alias="maxValue")
     measured_value: Optional[float] = Field(None, alias="measuredValue")
     unit: Optional[str] = Field(None, alias="unit")
+    args: Optional[List[str]] = Field(None, alias="args")
 
 
 class Role(StrEnum):

@@ -58,6 +58,8 @@ import useWithPermission from "@/renderer/hooks/useWithPermission";
 import { useSequencerModalStore } from "@/renderer/stores/modal";
 import { WriteMinMaxModal } from "@/renderer/routes/test_sequencer_panel/components/modals/WriteMinMaxModal";
 import { toast } from "sonner";
+import { ChangeLinkedTestModal } from "../modals/ChangeLinkedTest";
+import { ImportType } from "../modals/ImportTestModal";
 import { useSequencerStore } from "@/renderer/stores/sequencer";
 import { useShallow } from "zustand/react/shallow";
 
@@ -267,7 +269,10 @@ export function TestTable() {
       header: () => <div className="pl-4 text-center">Status</div>,
       cell: ({ row }) => {
         return row.original.type === "test" ? (
-          <div className="my-2 flex justify-center">
+          <div
+            className="my-2 flex justify-center"
+            data-testid={`status-${row.original.testName}`}
+          >
             {typeof mapStatusToDisplay[row.original.status] === "function"
               ? mapStatusToDisplay[row.original.status](row.original.error)
               : mapStatusToDisplay[row.original.status]}
@@ -346,6 +351,8 @@ export function TestTable() {
     },
   });
 
+  // Remove ----------------------
+
   const handleClickRemoveTests = () => {
     onRemoveTest(map(Object.keys(rowSelection), (idxStr) => parseInt(idxStr)));
     setRowSelection([]);
@@ -362,6 +369,8 @@ export function TestTable() {
       return new_elems;
     });
   };
+
+  // Conditional ------------------
 
   const addConditionalAfterIdx = useRef(-1);
 
@@ -408,6 +417,8 @@ export function TestTable() {
     setShowWriteConditionalModal(true);
   };
 
+  // Edit MinMax ------------------
+
   const onClickWriteMinMax = (idx: number) => {
     writeMinMaxForIdx.current = idx;
     setShowWriteMinMaxModal(true);
@@ -430,6 +441,31 @@ export function TestTable() {
       return new_data;
     });
   };
+
+  // Change linked test ------------
+
+  const [openLinkedTestModal, setOpenLinkedTestModal] = useState(false);
+  const testRef = useRef(-1);
+
+  const handleChangeLinkedTest = (
+    newPath: string,
+    testType: ImportType,
+    args: string[] | undefined,
+  ) => {
+    setElems((data) => {
+      const new_data = [...data];
+      const test = new_data[testRef.current] as Test;
+      new_data[testRef.current] = {
+        ...test,
+        path: newPath,
+        testType: testType,
+        args: args,
+      };
+      return new_data;
+    });
+  };
+
+  // Context Menu ------------------
 
   const getSpecificContextMenuItems = (row: Row<TestSequenceElement>) => {
     switch (row.original.type) {
@@ -466,6 +502,11 @@ export function TestTable() {
         isModalOpen={showWriteMinMaxModal}
         setModalOpen={setShowWriteMinMaxModal}
         handleWrite={onSubmitWriteMinMax}
+      />
+      <ChangeLinkedTestModal
+        isModalOpen={openLinkedTestModal}
+        setModalOpen={setOpenLinkedTestModal}
+        handleSubmit={handleChangeLinkedTest}
       />
       {openPyTestFileModal && (
         <PythonTestFileModal
@@ -579,17 +620,31 @@ export function TestTable() {
                     >
                       Add Conditional
                     </ContextMenuItem>
+                    {row.original.type === "test" &&
+                      row.original.testType !== "placeholder" && (
+                        <>
+                          <ContextMenuSeparator />
+                          <ContextMenuItem
+                            onClick={() => {
+                              setOpenPyTestFileModal(true);
+                              setTestToDisplay(row.original as Test);
+                            }}
+                          >
+                            Consult Code
+                          </ContextMenuItem>
+                        </>
+                      )}
+                    {row.original.type === "test" &&
+                      row.original.testType === "placeholder" && (
+                        <>
+                          <ContextMenuSeparator />
+                          <ContextMenuItem disabled={true}>
+                            Not Linked to any code
+                          </ContextMenuItem>
+                        </>
+                      )}
                     {row.original.type === "test" && (
                       <>
-                        <ContextMenuSeparator />
-                        <ContextMenuItem
-                          onClick={() => {
-                            setOpenPyTestFileModal(true);
-                            setTestToDisplay(row.original as Test);
-                          }}
-                        >
-                          Consult Code
-                        </ContextMenuItem>
                         <ContextMenuSeparator />
                         <ContextMenuItem
                           onClick={() => {
@@ -613,6 +668,15 @@ export function TestTable() {
                           }}
                         >
                           Edit Expected Value
+                        </ContextMenuItem>
+                        <ContextMenuItem
+                          onClick={() => {
+                            setOpenLinkedTestModal(true);
+                            testRef.current = parseInt(row.id);
+                            setTestToDisplay(row.original as Test);
+                          }}
+                        >
+                          Change executable
                         </ContextMenuItem>
                       </>
                     )}

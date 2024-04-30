@@ -17,6 +17,7 @@ import {
 } from "@/renderer/types/test-sequencer";
 import { createNewTest } from "@/renderer/hooks/useTestSequencerState";
 import { err, ok, Result } from "neverthrow";
+import { toast } from "sonner";
 
 // Exposed API
 export type StateManager = {
@@ -229,10 +230,16 @@ async function saveToDisk(
 }
 
 async function installDeps(sequence: TestSequencerProject): Promise<boolean> {
+  if (sequence.interpreter.requirementsPath === null) {
+    return true;
+  }
   const success = await window.api.poetryInstallRequirementsUserGroup(
     sequence.projectPath + sequence.interpreter.requirementsPath,
   );
-  return success;
+  if (!success) {
+    toast.error("Not able to installing dependencies");
+  }
+  return true;
 }
 
 async function syncSequence(
@@ -272,17 +279,18 @@ async function createExportableSequenceElementsFromTestSequencerElements(
   }
   const elements = [...elems].map((elem) => {
     return elem.type === "test"
-      ? createNewTest(
-          removeBaseFolderFromName(elem.testName, baseFolder),
-          elem.path.replaceAll(baseFolder, ""),
-          elem.testType,
-          elem.exportToCloud,
-          elem.id,
-          elem.groupId,
-          elem.minValue,
-          elem.maxValue,
-          elem.unit,
-        )
+      ? createNewTest({
+          name: removeBaseFolderFromName(elem.testName, baseFolder),
+          path: elem.path.replaceAll(baseFolder, ""),
+          type: elem.testType,
+          exportToCloud: elem.exportToCloud,
+          id: elem.id,
+          groupId: elem.groupId,
+          minValue: elem.minValue,
+          maxValue: elem.maxValue,
+          unit: elem.unit,
+          args: elem.args,
+        })
       : {
           ...elem,
           condition: elem.condition.replaceAll(baseFolder, ""),
@@ -298,17 +306,18 @@ async function createTestSequencerElementsFromSequenceElements(
 ): Promise<Result<TestSequenceElement[], Error>> {
   const elements: TestSequenceElement[] = [...sequence.elems].map((elem) => {
     return elem.type === "test"
-      ? createNewTest(
-          removeBaseFolderFromName(elem.testName, baseFolder),
-          baseFolder + elem.path,
-          elem.testType,
-          elem.exportToCloud,
-          elem.id,
-          elem.groupId,
-          elem.minValue,
-          elem.maxValue,
-          elem.unit,
-        )
+      ? createNewTest({
+          name: removeBaseFolderFromName(elem.testName, baseFolder),
+          path: baseFolder + elem.path,
+          type: elem.testType,
+          exportToCloud: elem.exportToCloud,
+          id: elem.id,
+          groupId: elem.groupId,
+          minValue: elem.minValue,
+          maxValue: elem.maxValue,
+          unit: elem.unit,
+          args: elem.args,
+        })
       : {
           ...elem,
         };

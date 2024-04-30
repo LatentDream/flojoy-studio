@@ -7,9 +7,8 @@ import {
   standbyStatus,
 } from "./utils";
 import { Selectors } from "./selectors";
-import { join } from "path";
 
-test.describe("Create a test sequence", () => {
+test.describe("Load a demo test sequence", () => {
   let window: Page;
   let app: ElectronApplication;
   test.beforeAll(async () => {
@@ -31,39 +30,28 @@ test.describe("Create a test sequence", () => {
   });
 
   test("Should load and run a sequence", async () => {
-    // Load a complexe sequence
-    const customSeqFile = join(
-      __dirname,
-      "fixtures/custom-sequences/complexe_sequence.tjoy",
-    );
-    await app.evaluate(async ({ dialog }, customTestFile) => {
-      dialog.showOpenDialog = () =>
-        Promise.resolve({ filePaths: [customTestFile], canceled: false });
-    }, customSeqFile);
-    await window.waitForTimeout(5000);
-
-    // Ctrl/meta + o key shortcut to open a sequence
-    if (process.platform === "darwin") {
-      await window.keyboard.press("Meta+o");
-    } else {
-      await window.keyboard.press("Control+o");
-    }
-
-    // Small delay
-    await window.waitForTimeout(10000);
-
-    // To Debug CI
-    await window.screenshot({
-      path: "test-results/load-complex-sequence.jpeg",
-      fullPage: true,
+    await expect(window.getByTestId(Selectors.newDropdown)).toBeEnabled({
+      timeout: 15000,
     });
+
+    // Open the sequence gallery
+    await window.getByTestId(Selectors.newDropdown).click();
+    await window.getByTestId(Selectors.openSequenceGalleryBtn).click();
+
+    // Open a sequence
+    await window
+      .getByTestId("test_step_with_expected_and_exported_values")
+      .nth(1)
+      .click();
 
     // Expect sequence and tests to be loaded
     await expect(
-      window.locator("div", { hasText: "test_one" }).first(),
+      window.locator("div", { hasText: "Export_&_Expected_Demo" }).first(),
     ).toBeVisible();
+
+    // Expect test steps to bey loaded
     await expect(
-      window.locator("div", { hasText: "complexe_sequence" }).first(),
+      window.locator("div", { hasText: "test_min_max" }).first(),
     ).toBeVisible();
 
     // Run the sequence
@@ -72,6 +60,9 @@ test.describe("Create a test sequence", () => {
 
     // Check the status
     await expect(window.getByTestId(Selectors.globalStatusBadge)).toContainText(
+      "FAIL",
+    );
+    await expect(window.getByTestId("status-test_min_max")).toContainText(
       "PASS",
     );
   });

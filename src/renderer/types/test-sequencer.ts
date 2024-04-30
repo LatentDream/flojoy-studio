@@ -4,7 +4,12 @@ export type LockedContextType = {
   isLocked: boolean;
 };
 
-export const TestType = z.enum(["pytest", "python", "flojoy", "matlab"]);
+export const TestType = z.enum([
+  "pytest",
+  "python",
+  "placeholder",
+  "robotframework",
+]);
 export type TestType = z.infer<typeof TestType>;
 
 export const ResultType = z.enum(["pass", "fail", "aborted"]);
@@ -72,6 +77,7 @@ export const Test = z.object({
   maxValue: z.number().optional(),
   measuredValue: z.number().optional(),
   unit: z.string().optional(),
+  args: z.string().array().optional(),
 });
 
 export type Test = z.infer<typeof Test>;
@@ -145,8 +151,8 @@ export type InterpreterType = z.infer<typeof InterpreterType>;
 
 export const Interpreter = z.object({
   type: InterpreterType,
-  path: z.union([z.null(), z.string()]),
-  requirementsPath: z.union([z.null(), z.string()]),
+  path: z.string().nullable(),
+  requirementsPath: z.string().nullable(),
 });
 
 export type Interpreter = z.infer<typeof Interpreter>;

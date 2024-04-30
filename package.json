@@ -2,7 +2,7 @@
   "name": "flojoy-studio",
   "productName": "Flojoy Studio",
   "description": "Joyful visual programming for Python",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "homepage": "./",
   "author": "Jack Parmer <jp@flojoy.io>",
@@ -171,5 +171,5 @@
     ],
     "all": true
   },
-  "packageManager": "pnpm@9.0.5"
+  "packageManager": "pnpm@9.0.6"
 }
