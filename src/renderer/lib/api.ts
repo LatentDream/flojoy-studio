@@ -261,7 +261,6 @@ export const postSession = (
     measurements,
   };
 
-  console.log(JSON.stringify(body));
   return captain.post("cloud/session", { json: body }).json();
 };
 

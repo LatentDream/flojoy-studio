@@ -51,14 +51,6 @@ import {
   poetryUninstallDepUserGroup,
 } from "./python/poetry";
 import { createEditorWindow } from "./window";
-import {
-  createUserProfile,
-  deleteUserProfile,
-  getUsers,
-  setUserProfile,
-  setUserProfilePassword,
-  validatePassword,
-} from "@/api/services/auth-service";
 
 const handleSetUnsavedChanges = (_, value: boolean) => {
   global.hasUnsavedChanges = value;
@@ -170,15 +162,6 @@ export const registerIpcMainHandlers = () => {
   ipcMain.handle(API.openLink, (_, url) => {
     shell.openExternal(url);
   });
-  // Authentication
-  ipcMain.handle(API.getUserProfiles, async () => {
-    return Promise.resolve(getUsers());
-  });
-  ipcMain.on(API.setUserProfile, setUserProfile);
-  ipcMain.handle(API.setUserProfilePassword, setUserProfilePassword);
-  ipcMain.handle(API.validatePassword, validatePassword);
-  ipcMain.handle(API.createUserProfile, createUserProfile);
-  ipcMain.handle(API.deleteUserProfile, deleteUserProfile);
   ipcMain.handle(API.getFileContent, readFileSync);
   ipcMain.handle(API.isFileOnDisk, isFileOnDisk);
 };

@@ -30,29 +30,20 @@ export const AuthContextProvider = ({
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
 
-  const authenticateUser = useCallback(() => {
-    const loggedUser = users.find((u) => u.logged);
-    setUser(loggedUser ?? users[0]);
-  }, [users]);
-
   const refreshUsers = useCallback(async () => {
-    const users = await window.api.getUserProfiles();
-    setUsers(users);
+    setUsers([]);
   }, []);
 
   useEffect(() => {
     refreshUsers();
   }, [refreshUsers]);
 
-  useEffect(() => {
-    authenticateUser();
-  }, [authenticateUser, users]);
   const values = useMemo(
     () => ({
       user,
-      users,
-      refreshUsers,
       setUser,
+      users,
+      refreshUsers
     }),
     [user, users, refreshUsers],
   );

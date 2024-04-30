@@ -3,7 +3,6 @@ import * as fileSave from "./fileSave";
 import { InterpretersList } from "@/main/python/interpreter";
 import { PoetryGroupInfo, PythonDependency } from "src/types/poetry";
 import { ResultAsync, fromPromise } from "neverthrow";
-import type { User } from "@/types/auth";
 import path from "path";
 
 export const API = {
@@ -58,13 +57,6 @@ export const API = {
   getAllLogs: "GET_ALL_LOGS",
   openLink: "OPEN_LINK",
   openTestPicker: "OPEN_TEST_PICKER",
-  // Authentication
-  getUserProfiles: "GET_USER_PROFILES",
-  setUserProfile: "SET_USER_PROFILE",
-  setUserProfilePassword: "SET_USER_PROFILE_PASSWORD",
-  validatePassword: "VALIDATE_PASSWORD",
-  createUserProfile: "CREATE_USER_PROFILE",
-  deleteUserProfile: "DELETE_USER_PROFILE",
 } as const;
 
 export default {
@@ -189,18 +181,4 @@ export default {
   openLink: (url: string): Promise<void> =>
     ipcRenderer.invoke(API.openLink, url),
 
-  getUserProfiles: (): Promise<User[]> =>
-    ipcRenderer.invoke(API.getUserProfiles),
-
-  setUserProfile: (username: string): void => {
-    ipcRenderer.send(API.setUserProfile, username);
-  },
-  setUserProfilePassword: (username: string, password: string): Promise<void> =>
-    ipcRenderer.invoke(API.setUserProfilePassword, username, password),
-  validatePassword: (username: string, password: string): Promise<boolean> =>
-    ipcRenderer.invoke(API.validatePassword, username, password),
-  createUserProfile: (user: User) =>
-    ipcRenderer.invoke(API.createUserProfile, user),
-  deleteUserProfile: (username: string, currentUser: User): Promise<void> =>
-    ipcRenderer.invoke(API.deleteUserProfile, username, currentUser),
 };

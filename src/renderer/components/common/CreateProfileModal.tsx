@@ -64,7 +64,7 @@ export function CreateUserProfile({
   });
 
   const handleSubmit = async (data: z.infer<typeof formSchema>) => {
-    const nameExists = users.find((u) => u.name === data.name);
+    const nameExists = users.find((u) => u.username === data.name);
     if (nameExists) {
       form.setError("name", { message: "User name already exists!" });
       return;

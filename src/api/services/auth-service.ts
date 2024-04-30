@@ -13,7 +13,7 @@ const comparePassword = (plainPassword: string, hashedPassword: string) => {
 
 export const getUsers = () => {
   return store.get("users").map((u) => ({
-    name: u.name,
+    name: u.username,
     role: u.role,
     password: u.password ? "password" : undefined,
     logged: Boolean(u.logged),
@@ -23,7 +23,7 @@ export const getUsers = () => {
 export const setUserProfile = (_, username: string) => {
   const users = store.get("users");
   const filteredUsers = users.map((u) => {
-    if (u.name === username) {
+    if (u.username === username) {
       u.logged = true;
     } else {
       u.logged = false;
@@ -44,7 +44,7 @@ export const setUserProfilePassword = (
 ): Promise<void> => {
   const users = store.get("users");
   const modifiedUsers = users.map((u) => {
-    if (u.name === username) {
+    if (u.username === username) {
       const hashedPassword = hashPassword(password);
       u.password = hashedPassword;
     }
@@ -63,7 +63,7 @@ export const setUserProfilePassword = (
 export const validatePassword = (_, username: string, password: string) => {
   const users = store.get("users");
   const user = users.find(
-    (u) => u.name === username && comparePassword(password, u.password ?? ""),
+    (u) => u.username === username && comparePassword(password, u.password ?? ""),
   );
   if (user) {
     return Promise.resolve(true);
@@ -90,7 +90,7 @@ export const deleteUserProfile = (_, username: string, currentUser: User) => {
   if (currentUser.role !== "Admin") {
     throw new Error("Only admin can delete users!");
   }
-  const modifiedUsers = users.filter((u) => u.name !== username);
+  const modifiedUsers = users.filter((u) => u.username !== username);
   try {
     store.set("users", modifiedUsers);
     Promise.resolve(void 0);

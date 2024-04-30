@@ -12,7 +12,7 @@ export const store = new Store<TypedStore>({
     poetryOptionalGroups: [],
     users: [
       {
-        name: os.userInfo().username,
+        username: os.userInfo().username,
         role: "Local",
         logged: true,
       },

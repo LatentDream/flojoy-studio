@@ -27,7 +27,7 @@ const ProfileMenu = () => {
     <Fragment>
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center gap-2 px-2">
-          {user.name.slice(0, 10)}
+          {user.username.slice(0, 10)}
           {user.role === "Admin" ? (
             <Badge> Admin </Badge>
           ) : (

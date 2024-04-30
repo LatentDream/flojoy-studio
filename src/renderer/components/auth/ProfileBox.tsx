@@ -45,10 +45,10 @@ const ProfileBox = ({
       setPassRequired(true);
       return;
     }
-    window.api.setUserProfile(user.name);
+    window.api.setUserProfile(user.username);
     setUser(user);
     await captain.post("auth/login", {
-      json: { username: user.name, password },
+      json: { username: user.username, password },
     });
     navigate("/flowchart");
   };
@@ -56,25 +56,25 @@ const ProfileBox = ({
     if (e.key === "Enter" && passRequired) {
       if (password === "") return;
       const passMatched = await window.api.validatePassword(
-        user.name,
+        user.username,
         password,
       );
       if (!passMatched) {
         setErrorMsg("Wrong password");
         return;
       }
-      window.api.setUserProfile(user.name);
+      window.api.setUserProfile(user.username);
       setUser(user);
       setPassRequired(false);
       await captain.post("auth/login", {
-        json: { username: user.name, password },
+        json: { username: user.username, password },
       });
       navigate("/flowchart");
     }
   };
   const handleDeleteProfile = async () => {
     try {
-      await window.api.deleteUserProfile(user.name, currentUser);
+      await window.api.deleteUserProfile(user.username, currentUser);
       toast.message("Profile deleted successfully!");
       refreshUsers();
       setOpenConfirmPrompt(false);
@@ -90,13 +90,13 @@ const ProfileBox = ({
         onClick={handleBoxClick}
         className={cn(
           "flex w-52 cursor-pointer flex-col items-center gap-4 rounded-md border p-5 hover:bg-muted",
-          { "border-accent1": currentUser.name === user.name },
+          { "border-accent1": currentUser.username === user.username },
         )}
       >
         <div className="relative flex w-full items-center justify-center">
           <p className="text-md">{user.role}</p>
           {currentUser.role === "Admin" &&
-            user.name !== currentUser.name &&
+            user.username !== currentUser.username &&
             !startup && (
               <div className="absolute right-1 top-2 z-20">
                 <DropdownMenu>
@@ -117,7 +117,7 @@ const ProfileBox = ({
             )}
         </div>
         <Avatar className="h-24 w-24 text-2xl">
-          <AvatarFallback>{getAlphabetAvatar(user.name)}</AvatarFallback>
+          <AvatarFallback>{getAlphabetAvatar(user.username)}</AvatarFallback>
         </Avatar>
 
         <div
@@ -155,7 +155,7 @@ const ProfileBox = ({
         </div>
 
         <p className="w-full overflow-hidden text-ellipsis text-center text-sm">
-          {user.name}
+          {user.username}
         </p>
       </div>
       <ConfirmPrompt

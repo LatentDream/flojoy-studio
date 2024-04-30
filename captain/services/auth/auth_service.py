@@ -14,14 +14,14 @@ def compare_pass(hashed_token: str, plain_token: str):
 
 def has_cloud_access(username: str, plain_token: str) -> bool:
     user = get_user(username, plain_token)
-    if not user or user == "Local":
+    if not user or not user.is_connected:
         return False
     return True
 
 
 def has_write_access(username: str, plain_token: str) -> bool:
     user = get_user(username, plain_token)
-    if not user or user.permission == "Operator":
+    if not user or user.role == "Operator":
         return False
     return True
 
@@ -57,9 +57,9 @@ def save_user(user: Auth) -> bool:
     if not os.path.exists(db_path):
         open(db_path, "x").close()
 
-    with open(db_path, "rw") as f:
+    with open(db_path, "r+") as f:
         config = json.load(f)
-        config.user = user
+        config["user"] = user.model_dump()
         json.dump(config, f)
         return True
 

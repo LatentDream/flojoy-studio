@@ -1,31 +1,44 @@
 import { useAuth } from "@/renderer/context/auth.context";
-import ProfileBox from "@/renderer/components/auth/ProfileBox";
-
-import { PlusIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { CreateUserProfile } from "@/renderer/components/common/CreateProfileModal";
+import { Separator } from "@/renderer/components/ui/separator";
+import { Button } from "@/renderer/components/ui/button";
+import { deleteEnvironmentVariable } from "@/renderer/lib/api";
+
+import { useQuery } from "@tanstack/react-query";
 import { captain } from "@/renderer/lib/ky";
+
 
 type AuthPageProps = {
   startup: boolean;
 };
 
 const AuthPage = ({ startup }: AuthPageProps) => {
-  const { user, users, setUser } = useAuth();
-  const [openCreateProfile, setOpenCreateProfile] = useState(false);
+
+  // const authMethodsQuery = useQuery({
+  //   queryKey: ["authMethods"],
+  //   queryFn: async () => {
+  //     // TODO(auth): Convert fetch to ky with and env.VITE_SERVER_URL to handle private deployment
+  //     // TODO(auth): Cross Origin Error
+  //     console.log("fetching auth methods");
+  //     const result = await fetch("https://api.flojoy.ai/auth/");
+  //     console.log("result: ", result);
+  //     if (!result.ok) {
+  //       throw new Error("Failed to fetch auth methods");
+  //     }
+  //     return result.json();
+  //   },
+  // });
+  //
+
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const validateUser = async () => {
     if (!user) return;
-    if (!user.password && startup) {
-      await captain.post("auth/login", {
-        json: {
-          username: user.name,
-          password: "",
-        },
-      });
+    if (startup) {
+      console.log("User: ", user);
+      await captain.post("auth/login", {json: user});
       navigate("/flowchart");
-      window.api.setUserProfile(user.name);
     }
   };
   useEffect(() => {
@@ -33,53 +46,66 @@ const AuthPage = ({ startup }: AuthPageProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  const handleContinueWithoutSignIn = () => {
+    setUser({
+      username: "Gui",
+      role: "Admin",
+      connection: null
+    });
+  }
+
+  const handleSignIn = () => {
+    // Set Workspace token
+    // Set Permission
+    // Set User
+    setUser({
+      username: "Connected",
+      role: "Admin",
+      connection: null
+    });
+  }
+
   return (
-    <div className="flex h-screen w-screen flex-col items-center justify-center">
-      <div className="flex min-w-[400px] max-w-5xl flex-col items-center gap-4 rounded-md border bg-background p-6">
-        <div className="flex flex-col items-center justify-center gap-1 pb-3">
-          <img
-            src="/assets/logo.png"
-            alt="logo"
-            className="h-12 w-12 rounded-full"
-          />
-          <h3 className="text-2xl">Who's using Studio ?</h3>
-          <h6 className="px-5 text-sm">
-            With profiles you can control over all of your studio stuff like who
-            can edit block scripts, apps etc
-          </h6>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-3 pb-5">
-          {!!users.length &&
-            users.map((u) => (
-              <ProfileBox
-                key={u.name}
-                user={u}
-                setUser={setUser}
-                currentUser={user ?? users[0]}
-                showPassOption={
-                  !startup ? u.name !== user?.name : u.name === user?.name
-                }
-                startup={startup}
-              />
-            ))}
-          {user?.role === "Admin" && !startup && (
-            <div
-              onClick={() => setOpenCreateProfile(true)}
-              title="Add new profile"
-              className="flex h-56 w-52 cursor-pointer items-center justify-center gap-4 rounded-md border p-5 hover:bg-muted"
-            >
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border bg-muted p-2">
-                <PlusIcon />
-              </div>
+    <>
+      <div className="flex h-screen w-screen flex-col items-center justify-center">
+        <div className="flex min-w-[600px] min-h-[400px] max-w-5xl gap-4 rounded-md border bg-background p-6 drop-shadow-md">
+          <div className="flex flex-col w-1/2 gap-1 pb-3">
+
+            <div className="grow" />
+            <h1 className="text-xl font-bold">Sign In</h1>
+            <p className="text-xs text-muted-foreground"> Connect with Flojoy to continue</p>
+            <Button
+              className="w-full h-8 mt-8 text-xs"
+              onClick={() => handleSignIn()}
+            >Sign In with Flojoy Cloud</Button>
+            <div className="flex gap-2 items-center justify-center">
+              <Separator className="my-3 w-2/5" />
+              <p className="text-xs text-muted-foreground">or</p>
+              <Separator className="my-3 w-2/5" />
             </div>
-          )}
+            <Button
+              variant="outline"
+              className="w-full h-8 text-xs"
+              onClick={() => handleContinueWithoutSignIn()}
+            >Continue Without Signing In</Button>
+            <div className="grow" />
+
+            <div className="flex flex-col h-8">
+            </div>
+
+          </div>
+          <Separator orientation="vertical" />
+          <div className="flex items-center justify-center w-1/2">
+            {/* TODO: Replace with Enterprise Logo */}
+            <img
+              src="/assets/logo.png"
+              alt="logo"
+              className="h-12 w-12 rounded-full"
+            />
+          </div>
         </div>
       </div>
-      <CreateUserProfile
-        open={openCreateProfile}
-        handleOpenChange={setOpenCreateProfile}
-      />
-    </div>
+    </>
   );
 };
 
