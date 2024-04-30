@@ -1,11 +1,11 @@
-from typing import Callable, Optional
+from typing import Callable, Coroutine
 from fastapi import Request, HTTPException, status
 import base64
 from captain.services.auth.auth_service import get_user, has_cloud_access, has_write_access
 from captain.types.auth import Auth
 
 
-def _with_verify_access(func: Callable[[str, str]]):
+def _with_verify_access(func: Callable[[str, str], bool]):
     async def wrapper(req: Request):
         exception_txt = "You are not authorized to perform this action"
         studio_cookie = req.cookies.get("studio-auth")
@@ -19,8 +19,7 @@ def _with_verify_access(func: Callable[[str, str]]):
         try:
             credentials = base64.b64decode(studio_cookie).decode("utf-8")
             username, token = credentials.split(":", 1)
-            authorized = has_cloud_access(username, token)
-            func(username, token)
+            authorized = func(username, token)
 
             if not authorized:
                 raise HTTPException(
@@ -36,7 +35,7 @@ def _with_verify_access(func: Callable[[str, str]]):
 
 
 @_with_verify_access
-async def can_write(username, token):
+def can_write(username: str, token: str) -> bool:
     """
     Middleware to check if the user can modify protected resources
     Example of use
@@ -48,7 +47,7 @@ async def can_write(username, token):
 
 
 @_with_verify_access
-async def is_connected(username, token):
+def is_connected(username: str, token: str) -> bool:
     """
     Middleware to check if the user has access to the cloud
     Example of use
