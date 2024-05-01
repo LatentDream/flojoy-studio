@@ -3,9 +3,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/renderer/components/ui/separator";
 import { Button } from "@/renderer/components/ui/button";
-import { deleteEnvironmentVariable } from "@/renderer/lib/api";
-
-import { useQuery } from "@tanstack/react-query";
 import { captain } from "@/renderer/lib/ky";
 import { User } from "@/types/auth";
 
@@ -16,27 +13,11 @@ type AuthPageProps = {
 
 const AuthPage = ({ startup }: AuthPageProps) => {
 
-  // const authMethodsQuery = useQuery({
-  //   queryKey: ["authMethods"],
-  //   queryFn: async () => {
-  //     // TODO(auth): Convert fetch to ky with and env.VITE_SERVER_URL to handle private deployment
-  //     // TODO(auth): Cross Origin Error
-  //     console.log("fetching auth methods");
-  //     const result = await fetch("https://api.flojoy.ai/auth/");
-  //     console.log("result: ", result);
-  //     if (!result.ok) {
-  //       throw new Error("Failed to fetch auth methods");
-  //     }
-  //     return result.json();
-  //   },
-  // });
-  //
-
   const { setUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    setUser(null);
+    if (!startup) setUser(null);
   }, []);
 
   const handleContinueWithoutSignIn = async () => {

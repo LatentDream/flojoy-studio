@@ -172,8 +172,8 @@ const ControlBar = () => {
           <MenubarMenu></MenubarMenu>
         </Menubar>
       </div>
-      <Menubar>
-        <MenubarMenu>
+      <Menubar className="space-x-0 p-0">
+        <MenubarMenu >
           <ProfileMenu />
         </MenubarMenu>
       </Menubar>
