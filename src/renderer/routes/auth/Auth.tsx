@@ -7,6 +7,7 @@ import { deleteEnvironmentVariable } from "@/renderer/lib/api";
 
 import { useQuery } from "@tanstack/react-query";
 import { captain } from "@/renderer/lib/ky";
+import { User } from "@/types/auth";
 
 
 type AuthPageProps = {
@@ -31,27 +32,22 @@ const AuthPage = ({ startup }: AuthPageProps) => {
   // });
   //
 
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
-  const validateUser = async () => {
-    if (!user) return;
-    if (startup) {
-      console.log("User: ", user);
-      await captain.post("auth/login", {json: user});
-      navigate("/flowchart");
-    }
-  };
-  useEffect(() => {
-    validateUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
-  const handleContinueWithoutSignIn = () => {
-    setUser({
+  useEffect(() => {
+    setUser(null);
+  }, []);
+
+  const handleContinueWithoutSignIn = async () => {
+    const user: User = {
       username: "Gui",
       role: "Admin",
       connection: null
-    });
+    }
+    setUser(user);
+    await captain.post("auth/login", { json: user });
+    navigate("/flowchart");
   }
 
   const handleSignIn = () => {

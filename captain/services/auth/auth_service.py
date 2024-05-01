@@ -54,11 +54,12 @@ def save_user(user: Auth) -> bool:
     if not db_path:
         return False
 
-    if not os.path.exists(db_path):
-        open(db_path, "x").close()
+    config = {}
+    if os.path.exists(db_path):
+        with open(db_path, "r") as f:
+            config = json.load(f)
 
-    with open(db_path, "r+") as f:
-        config = json.load(f)
+    with open(db_path, "w") as f:
         config["user"] = user.model_dump()
         json.dump(config, f)
         return True

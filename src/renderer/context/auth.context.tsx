@@ -10,7 +10,7 @@ import { User } from "src/types/auth";
 
 type States = {
   user: User | null;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
   users: User[];
   refreshUsers: () => void;
 };
