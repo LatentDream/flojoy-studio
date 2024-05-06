@@ -1,3 +1,4 @@
+import logging
 from typing import Callable, Coroutine
 from fastapi import Request, HTTPException, status
 import base64
@@ -55,6 +56,7 @@ def is_connected(username: str, token: str) -> bool:
     async def update():
         return "resource updated"
     """
+    logging.info(f"Checking if {username} has access to the cloud")
     return has_cloud_access(username, token)
 
 

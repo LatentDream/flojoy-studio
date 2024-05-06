@@ -31,15 +31,23 @@ const AuthPage = ({ startup }: AuthPageProps) => {
     navigate("/flowchart");
   }
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     // Set Workspace token
-    // Set Permission
+    const connection = {
+      workspace: "flojoy",
+      cloudUrl: "https://cloud.flojoy.io",
+      token: "en2y2iss3wiqj3s8mbew8oe9jyfxv8v8uvr4k1xj",  // <- Dummy one
+    }
     // Set User
-    setUser({
-      username: "Connected",
+    const user: User = {
+      username: "guillaume@flojoy.io",
       role: "Admin",
-      connection: null
-    });
+      connection: connection
+    }
+    setUser(user);
+    // Set Permission in the backend
+    await captain.post("auth/login", { json: user });
+    navigate("/flowchart");
   }
 
   return (

@@ -13,6 +13,7 @@ type States = {
   setUser: (user: User | null) => void;
   users: User[];
   refreshUsers: () => void;
+  isConnected: boolean;
 };
 
 export const AuthContext = createContext<States>({
@@ -20,6 +21,7 @@ export const AuthContext = createContext<States>({
   user: null,
   users: [],
   setUser: () => {},
+  isConnected: false,
 });
 
 export const AuthContextProvider = ({
@@ -43,10 +45,12 @@ export const AuthContextProvider = ({
       user,
       setUser,
       users,
-      refreshUsers
+      refreshUsers,
+      isConnected : user !== null && user.connection !== null
     }),
     [user, users, refreshUsers],
   );
+
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };
 

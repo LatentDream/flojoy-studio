@@ -29,7 +29,7 @@ const ProfileMenu = () => {
           <Badge> {user.role} </Badge>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="mt-2">
-          <DropdownMenuLabel>{user.role}</DropdownMenuLabel>
+          <DropdownMenuLabel>Workspace: {" "}{user.connection.workspace}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => handleSwitchUser()}>
             Switch user profile

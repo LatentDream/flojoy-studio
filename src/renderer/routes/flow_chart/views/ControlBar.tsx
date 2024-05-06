@@ -38,7 +38,6 @@ const ControlBar = () => {
   const [isEditorSettingsOpen, setIsEditorSettingsOpen] = useState(false);
   const [isDeviceSettingsOpen, setIsDeviceSettingsOpen] = useState(false);
   const [isDebugSettingsOpen, setIsDebugSettingsOpen] = useState(false);
-
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   const { setIsEnvVarModalOpen, setIsDepManagerModalOpen } = useAppStore(

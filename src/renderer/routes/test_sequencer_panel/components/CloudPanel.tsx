@@ -41,6 +41,7 @@ import { Autocomplete } from "@/renderer/components/ui/autocomplete";
 import { useLoadTestProfile } from "@/renderer/hooks/useTestSequencerProject";
 import { RefreshCcw } from "lucide-react";
 import { Separator } from "@/renderer/components/ui/separator";
+import { useAuth } from "@/renderer/context/auth.context";
 
 export function CloudPanel() {
   const queryClient = useQueryClient();
@@ -79,6 +80,9 @@ export function CloudPanel() {
     })),
   );
 
+  const { isConnected } = useAuth();
+  console.log("Is Connected: ", isConnected);
+
   // Remove this once cloud ignore casing
   const [units, setUnits] = useState<Record<string, Unit>>({});
 
@@ -108,83 +112,55 @@ export function CloudPanel() {
     return integrity;
   };
 
-  const envsQuery = useQuery({
-    queryKey: ["envs"],
-    queryFn: async () => {
-      const res = await getEnvironmentVariables();
-      return res.match(
-        (vars) => vars,
-        (e) => {
-          toastQueryError(e, "Failed to fetch environment variables");
-          return [];
-        },
-      );
-    },
-  });
-
   const unitQuery = useQuery({
     queryKey: ["unit"],
     queryFn: async () => {
-      if (envsQuery.isSuccess) {
-        if (
-          envsQuery.data.some(
-            (c) => c.key === "FLOJOY_CLOUD_WORKSPACE_SECRET",
-          ) &&
-          partVarId !== ""
-        ) {
-          const res = await getCloudUnits(partVarId);
-          return res.match(
-            (vars) => {
-              setSerialNumbers(vars.map((unit) => unit.serialNumber));
-              const units = {};
-              vars.forEach((unit) => {
-                units[unit.serialNumber.toLowerCase()] = unit;
-              });
-              setUnits(units);
-              return vars;
-            },
-            (e) => {
-              console.error(e);
-              toast.error("Error fetching units");
-              return [];
-            },
-          );
-        }
+      if (partVarId !== "") {
+        const res = await getCloudUnits(partVarId);
+        return res.match(
+          (vars) => {
+            setSerialNumbers(vars.map((unit) => unit.serialNumber));
+            const units = {};
+            vars.forEach((unit) => {
+              units[unit.serialNumber.toLowerCase()] = unit;
+            });
+            setUnits(units);
+            return vars;
+          },
+          (e) => {
+            console.error(e);
+            toast.error("Error fetching units");
+            return [];
+          },
+        );
       }
       return [];
     },
-    enabled: envsQuery.isSuccess,
+    enabled: isConnected,
   });
 
   const projectsQuery = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
-      if (envsQuery.isSuccess) {
-        if (
-          envsQuery.data.some((c) => c.key === "FLOJOY_CLOUD_WORKSPACE_SECRET")
-        ) {
-          const res = await getCloudProjects();
-          return res.match(
-            (vars: Project[]) => {
-              return vars;
-            },
-            (e) => {
-              console.error(e);
-              toast.error("Failed to fetch test profiles");
-              return [];
-            },
-          );
-        }
-      }
-      return [];
+      const res = await getCloudProjects();
+      return res.match(
+        (vars: Project[]) => {
+          return vars;
+        },
+        (e) => {
+          console.error(e);
+          toast.error("Failed to fetch test profiles");
+          return [];
+        },
+      );
     },
-    enabled: envsQuery.isSuccess,
+    enabled: isConnected,
   });
 
   const stationsQuery = useQuery({
     queryKey: ["stations"],
     queryFn: async () => {
-      if (envsQuery.isSuccess && projectsQuery.isSuccess && projectId !== "") {
+      if (projectsQuery.isSuccess && projectId !== "") {
         const res = await getCloudStations(projectId);
         return res.match(
           (vars) => vars,
@@ -197,7 +173,7 @@ export function CloudPanel() {
       }
       return [];
     },
-    enabled: projectsQuery.isSuccess, // Enable only when projectsQuery is successful
+    enabled: isConnected,
   });
 
   const loadProfile = () => {
@@ -253,7 +229,6 @@ export function CloudPanel() {
   }, [isEnvVarModalOpen]);
 
   if (
-    !envsQuery.isSuccess ||
     !projectsQuery.isSuccess ||
     !stationsQuery.isSuccess
   ) {
@@ -264,13 +239,9 @@ export function CloudPanel() {
     );
   }
 
-  const isCloudKeySet = envsQuery.data.some(
-    (c) => c.key === "FLOJOY_CLOUD_WORKSPACE_SECRET",
-  );
-
   return (
     <div className="w-full">
-      {!isCloudKeySet ? (
+      {!isConnected ? (
         <Button onClick={() => setIsEnvVarModalOpen(true)} className="w-full">
           Connect to Flojoy Cloud
         </Button>
